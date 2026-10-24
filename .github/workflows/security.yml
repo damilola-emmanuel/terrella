@@ -1,0 +1,29 @@
+# Security scan on every push and pull request.
+# The scanners and the blocking policy live in damilola-emmanuel/security-checks,
+# so they are updated in one place for every repo.
+name: Security
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history, so a secret deleted in a later commit is still caught.
+          fetch-depth: 0
+      # Deliberately @main: this is our own repo, and every repo should get
+      # policy and scanner fixes as soon as they land.
+      - uses: damilola-emmanuel/security-checks@main # nosemgrep: github-actions-mutable-action-tag
